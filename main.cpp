@@ -1,6 +1,20 @@
 #include <iostream>
 #include <bits/stdc++.h>
+#include <unordered_map>
+#include <functional>
 #include "commands.hpp"
+
+// map of commands and their functions
+std::unordered_map<std::string, std::function<void(std::vector<std::string>)>> commandMap = 
+{
+    {"cd", changeDirectory},
+    {"?", [](std::vector<std::string> args){ static_cast<void>(args); showLastError(); }},
+    {"rm", deleteFiles},
+    {"mv", moveFile},
+    {"cp", copyFile},
+    {"dir", listDirectory},
+    {"help", [](std::vector<std::string> args){ static_cast<void>(args); printHelpMenu(); }}
+};
 
 std::vector<std::string> tokenizeCommand(std::string command)
 {
@@ -36,27 +50,19 @@ std::vector<std::string> tokenizeCommand(std::string command)
 
 bool handleCommand(std::string command)
 {
+    bool isExit = false;
     std::vector<std::string> tokens = tokenizeCommand(command);
 
-    if (tokens[0] == "exit")
-        return true;
-    else if (tokens[0] == "help")
-        printHelpMenu();
-    else if(tokens[0] == "cd") 
-        changeDirectory(tokens);
-    else if(tokens[0] == "?") 
-        showLastError();
-    else if(tokens[0] == "rm")
-        deleteFiles(tokens);
-    else if(tokens[0] == "mv") 
-        moveFile(tokens);
-    else if(tokens[0] == "cp") 
-        copyFile(tokens);
-    else if(tokens[0] == "dir")
-        listDirectory(tokens);
+    //find command in the map and execute it
+    auto it = commandMap.find(tokens[0]);
+    if (it != commandMap.end())
+        it->second(tokens);
+    else if(tokens[0] == "exit")
+        isExit = true;
     else
         std::cout << "Command not found. Type 'help' for help." << std::endl;
-    return false;
+
+    return isExit;
 }
 
 int main()
